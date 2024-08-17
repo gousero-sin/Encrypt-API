@@ -79,10 +79,16 @@ def decrypt():
 @app.route('/generate_key', methods=['POST'])
 def generate_key():
     key_name = request.json.get('key_name')
+
     if not key_name:
-        # Gera uma nova chave com nome baseado na data e hora
+        # Se nenhum nome for fornecido, gerar um nome baseado na data e hora
         encryption_key, key_name = generate_random_key_with_name()
     else:
+        # Verifica se o nome fornecido já existe
+        if os.path.exists(f"keys/{key_name}.key"):
+            return jsonify({"msg": "Key with this name already exists"}), 400
+        
+        # Gera uma nova chave com o nome fornecido
         encryption_key = Fernet.generate_key()
 
     # Armazenamento da chave em um arquivo
@@ -92,6 +98,7 @@ def generate_key():
         key_file.write(encryption_key)
 
     return jsonify({"msg": f"Key '{key_name}' generated successfully!"}), 200
+
 
 if __name__ == '__main__':
     if not os.path.exists('keys'):
