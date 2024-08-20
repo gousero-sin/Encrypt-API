@@ -1,31 +1,27 @@
-# Usando uma imagem oficial do Python como base
+# Usa uma imagem base oficial do Python
 FROM python:3.9-slim
 
-# Configurar o fuso horário (exemplo para São Paulo, Brasil)
-ENV TZ=America/Sao_Paulo
-RUN apt-get update && apt-get install -y tzdata && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    dpkg-reconfigure -f noninteractive tzdata
-
-# Definindo o diretório de trabalho dentro do container
+# Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copiando os arquivos de requisitos e instalando dependências
-COPY requirements.txt requirements.txt
+# Instala utilitários necessários e configura o timezone para GMT-3 (América/Sao_Paulo)
+RUN apt-get update && \
+    apt-get install -y tzdata && \
+    ln -fs /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata && \
+    apt-get clean
+
+# Copia o arquivo requirements.txt para o contêiner
+COPY requirements.txt .
+
+# Instala as dependências necessárias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiando o código da aplicação
+# Copia o restante do código da aplicação para o contêiner
 COPY . .
 
-# Criando o diretório de chaves
-RUN mkdir -p /app/keys
-
-# Expondo a porta em que a aplicação irá rodar
+# Expõe a porta em que a aplicação será executada
 EXPOSE 5000
 
-# Definindo a variável de ambiente para desenvolvimento
-ENV FLASK_ENV=development
-
-# Comando para iniciar a aplicação
-CMD ["python", "app.py"]
-
+# Comando para rodar a aplicação
+CMD ["python", "wsgi.py"]
